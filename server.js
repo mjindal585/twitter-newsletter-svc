@@ -18,7 +18,6 @@ console.log('mongodb_url - ', mongodb_url)
 mongoose.connect(mongodb_url, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useCreateIndex: true
 });
 
 const Schema = mongoose.Schema;
@@ -26,10 +25,11 @@ const user = new Schema({
   email: String,
   category: String,
   createdAt: Date,
+  deletedAt: Date,
 }).index({ email: 1, category: 1 });
 
 // Subscription Schema
-const User = mongoose.model('User', user);
+const User = mongoose.model('subscribers', user);
 
 const validCategories = [
   'sports', 'entertainment', 'boycott', 'hollywood', 'bollywood', 'politics', 'crime', 'religious', 'automobile', 'education', 'health', 'war', 'business', 'fashion', 'environment', 'accidents'
@@ -50,7 +50,7 @@ const validateInputs = (req, res, next) => {
 // Check if user is already subscribed
 const checkIfSubscribed = async (req, res, next) => {
   try {
-    const subscription = await User.findOne({ email: req.body.email, category: req.body.category });
+    const subscription = await User.findOne({ email: req.body.email, category: req.body.category, deletedAt: { $exists: false } });
     if (subscription) {
       return res.status(400).send({ error: 'User already subscribed to the category' });
     }
@@ -82,7 +82,7 @@ app.post('/subscribe', validateInputs, checkIfSubscribed, async (req, res) => {
 app.delete('/unsubscribe', validateInputs, async (req, res) => {
   try {
     console.log('unsubscrive api - ', req.body)
-    const subscription = await User.findOneAndDelete({ email: req.body.email });
+    const subscription = await User.findOneAndUpdate({ email: req.body.email, category: req.body.category }, { deletedAt: new Date() }, { upsert: false });
     if (!subscription) return res.status(404).send({
       error: 'User Not Subscribed',
     });
