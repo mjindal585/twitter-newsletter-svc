@@ -12,8 +12,6 @@ const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
-console.log('mongodb_url - ', mongodb_url)
-
 // Connect to MongoDB
 mongoose.connect(mongodb_url, {
   useNewUrlParser: true,
