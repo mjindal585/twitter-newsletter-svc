@@ -16,6 +16,7 @@ app.use(bodyParser.json());
 mongoose.connect(mongodb_url, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  socketTimeoutMS: 60000,
 });
 
 const Schema = mongoose.Schema;
