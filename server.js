@@ -58,6 +58,40 @@ const checkIfSubscribed = async (req, res, next) => {
   }
 };
 
+const checkIfUnSubscribedOrNotSubscribed = async (req, res, next) => {
+  try {
+    const aggregation = await User.aggregate([
+      {
+        $match: {
+          email: req.body.email, category: req.body.category,
+        }
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        }
+      },
+      {
+        $project: {
+          deletedAt: 1,
+        }
+      },
+      {
+        $limit: 1
+      }
+    ]);
+    if (aggregation.length === 0){
+      return res.status(400).send({ error: 'No user subscribed to the category' });
+    }
+    else if (aggregation[0].deletedAt) {
+      return res.status(400).send({ error: 'User already unsubscribed to the category' });
+    }
+    else next();
+  } catch (err) {
+    res.status(500).send(err);
+  }
+};
+
 // Use CORS middleware
 app.use(cors());
 
@@ -67,7 +101,7 @@ app.use(cors({ origin: '*' }));
 // Subscribe Route
 app.post('/subscribe', validateInputs, checkIfSubscribed, async (req, res) => {
   try {
-    console.log('Subscrive api - ', req.body)
+    console.log('Subscribe api - ', req.body)
     const subscription = new User({ ...req.body, createdAt: new Date() });
     await subscription.save();
     res.send(subscription);
@@ -77,14 +111,11 @@ app.post('/subscribe', validateInputs, checkIfSubscribed, async (req, res) => {
 });
 
 // Unsubscribe Route
-app.delete('/unsubscribe', validateInputs, async (req, res) => {
+app.delete('/unsubscribe', validateInputs, checkIfUnSubscribedOrNotSubscribed, async (req, res) => {
   try {
-    console.log('unsubscrive api - ', req.body)
-    const subscription = await User.findOneAndUpdate({ email: req.body.email, category: req.body.category }, { deletedAt: new Date() }, { upsert: false });
-    if (!subscription) return res.status(404).send({
-      error: 'User Not Subscribed',
-    });
-    res.send(subscription);
+    console.log('unsubscribe api - ', req.body)
+    const unsubscription = await User.findOneAndUpdate({ email: req.body.email, category: req.body.category, deletedAt: { $exists: false } }, { deletedAt: new Date() }, { upsert: false });
+    res.send(unsubscription);
   } catch (err) {
     res.status(500).send(err);
   }
