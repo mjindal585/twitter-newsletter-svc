@@ -8,7 +8,7 @@ require('dotenv').config();
 
 const app = express();
 const mongodb_url = process.env.MONGO_URL;
-const port = process.env.PORT;
+const port = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
 
@@ -98,6 +98,14 @@ app.use(cors());
 
 // Or specify allowed origin
 app.use(cors({ origin: '*' }));
+
+app.get('/', async (req, res) => {
+  try {
+    res.send({ app: 'twitter-newsletter-svc', status: 'OK' });
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
 
 // Subscribe Route
 app.post('/subscribe', validateInputs, checkIfSubscribed, async (req, res) => {
