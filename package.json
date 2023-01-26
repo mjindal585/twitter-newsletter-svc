@@ -2,9 +2,9 @@
   "name": "twitter-newsletter-svc",
   "version": "1.0.0",
   "description": "twitter-newsletter-svc",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Mohit Jindal",
